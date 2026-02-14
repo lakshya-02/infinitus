@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b11b7c832fb8aa42a7bc124764035c9, type: 3}
+  m_Name: SwingSettings
+  m_EditorClassIdentifier: 
+  maxGrappleDistance: 20
+  ropeSpringStiffness: 100
+  ropeSpringDamping: 10
+  swingForceMultiplier: 5
+  gravityScaleWhileSwinging: 0.6
+  controllerVelocityBoost: 3
+  ropeSagAmount: 0.5
+  ropeSegments: 10
+  hapticStrength: 0.5
+  hapticDuration: 0.1
