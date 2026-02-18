@@ -3,58 +3,27 @@ using UnityEngine;
 public class GrappleController : MonoBehaviour
 {
     [Header("Controller Settings")]
-    /// <summary>
-    /// Which controller is this? RTouch = Right, LTouch = Left
-    /// </summary>
     [SerializeField] private OVRInput.Controller controllerHand = OVRInput.Controller.RTouch;
 
     [Header("Ray Settings")]
-    /// <summary>
-    /// The empty GameObject that determines where ray starts and points
-    /// </summary>
     [SerializeField] private Transform rayOrigin;
-
-    /// <summary>
-    /// Maximum distance the grapple can reach
-    /// </summary>
     [SerializeField] private float maxGrappleDistance = 20f;
-
-    /// <summary>
-    /// Which layers can be grappled? Set in Inspector to 'Grappleable' only
-    /// </summary>
     [SerializeField] private LayerMask grappleableLayers;
 
     [Header("Rope Visual")]
-    /// <summary>
-    /// LineRenderer component for drawing the rope
-    /// </summary>
     [SerializeField] private LineRenderer ropeRenderer;
-
-    /// <summary>
-    /// How many points in the rope? More = more curved/realistic
-    /// </summary>
     [SerializeField] private int ropeSegments = 10;
-
-    /// <summary>
-    /// How much the rope sags in the middle (0 = straight, 1 = lots of sag)
-    /// </summary>
     [SerializeField] private float ropeSag = 0.3f;
 
     [Header("Haptics")]
-    /// <summary>
-    /// Vibration strength when grapple connects (0-1)
-    /// </summary>
     [SerializeField] private float hapticStrength = 0.5f;
-
-    /// <summary>
-    /// Vibration duration in seconds
-    /// </summary>
     [SerializeField] private float hapticDuration = 0.1f;
 
     private bool isGrappling = false;
     private Vector3 grapplePoint;
     private SwingPhysicsController physicsController;
     private float hapticTimer = 0f;
+    private bool isPulling = false;
 
     void Start()
     {
@@ -104,6 +73,21 @@ public class GrappleController : MonoBehaviour
         {
             EndGrapple();
         }
+        
+        if (isGrappling)
+        {
+            bool gripPressed = OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, controllerHand);
+            
+            if (gripPressed != isPulling)
+            {
+                isPulling = gripPressed;
+                
+                if (physicsController != null)
+                {
+                    physicsController.SetPulling(controllerHand == OVRInput.Controller.RTouch, isPulling);
+                }
+            }
+        }
     }
 
     void TryStartGrapple()
@@ -124,6 +108,9 @@ public class GrappleController : MonoBehaviour
         {
             grapplePoint = hit.point;
             isGrappling = true;
+            
+            Debug.Log($"[GrappleController] HIT! Object: {hit.collider.gameObject.name}, Layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}, Distance: {hit.distance:F2}m");
+
 
             if (ropeRenderer != null)
             {
@@ -140,12 +127,10 @@ public class GrappleController : MonoBehaviour
             }
 
             StartHapticFeedback();
-
-            Debug.Log($"[GrappleController] Grapple connected at {grapplePoint}");
         }
         else
         {
-            Debug.Log($"[GrappleController] No grappleable surface within {maxGrappleDistance}m");
+            Debug.LogWarning($"[GrappleController] MISSED! Check: Layer=Grappleable, Has Collider, Within {maxGrappleDistance}m");
         }
     }
 
