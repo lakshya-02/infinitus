@@ -18,7 +18,9 @@ MonoBehaviour:
   swingForceMultiplier: 5
   gravityScaleWhileSwinging: 0.6
   controllerVelocityBoost: 3
+  pullForce: 20
+  pullSpeedMultiplier: 1.5
   ropeSagAmount: 0.5
   ropeSegments: 10
-  hapticStrength: 0.5
+  hapticStrength: 0
   hapticDuration: 0.1

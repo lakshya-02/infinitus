@@ -15,6 +15,7 @@ public class SwingPhysicsController : MonoBehaviour
     [Header("Velocity Damping")]
     [SerializeField] private float velocityDampOnRelease = 0.7f;
     [SerializeField] private bool dampVelocityOnRelease = true;
+    [SerializeField] private bool stopGroundVelocityOnGrapple = true;
     
     [Header("Arm Throwing/Climbing Mechanics")]
     [SerializeField] private bool enableArmThrowing = true;
@@ -23,6 +24,7 @@ public class SwingPhysicsController : MonoBehaviour
     
     public float CurrentSpeed { get; private set; }
     public float MaxSpeedReached { get; private set; }
+    public bool IsGrappling => rightGrapple.isActive || leftGrapple.isActive;
     
     private class GrappleState
     {
@@ -83,6 +85,15 @@ public class SwingPhysicsController : MonoBehaviour
         grapple.grapplePoint = grapplePoint;
         grapple.handTransform = handTransform;
         grapple.initialDistance = distance;
+        
+        if (stopGroundVelocityOnGrapple && rb != null)
+        {
+            Vector3 vel = rb.linearVelocity;
+            vel.x = 0f;
+            vel.z = 0f;
+            rb.linearVelocity = vel;
+            Debug.Log($"[SwingPhysics] Ground velocity fully zeroed on grapple start");
+        }
         
         Debug.Log($"[SwingPhysics] {(isRightHand ? "Right" : "Left")} grapple started. Distance: {distance:F2}m");
     }
@@ -178,7 +189,6 @@ public class SwingPhysicsController : MonoBehaviour
         
         if (swingDirection.magnitude > 0.01f)
         {
-            float swingSpeed = Vector3.Dot(rb.linearVelocity, swingDirection);
             pendulumForce = swingDirection * settings.swingForceMultiplier;
         }
         

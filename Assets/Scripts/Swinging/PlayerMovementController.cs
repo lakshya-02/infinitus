@@ -17,16 +17,25 @@ public class PlayerMovementController : MonoBehaviour
     private Rigidbody rb;
     private bool isGrounded;
     private Quaternion lockedRotation;
+    private SwingPhysicsController swingPhysics;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        lockedRotation = transform.rotation;
+        swingPhysics = GetComponent<SwingPhysicsController>();
+
+        if (swingPhysics == null)
+        {
+            Debug.LogWarning("[PlayerMovement] SwingPhysicsController not found on this GameObject. Grapple state cannot be read.");
+        }
 
         if (cameraRig == null)
         {
             cameraRig = GetComponentInChildren<OVRCameraRig>()?.transform;
         }
+
+        // Capture locked rotation AFTER scene/XR init to get correct initial orientation.
+        lockedRotation = transform.rotation;
 
         if (lockAllRotation)
         {
@@ -39,6 +48,8 @@ public class PlayerMovementController : MonoBehaviour
         }
         
         rb.maxAngularVelocity = 0f;
+        // NOTE: Automatic Tensor in Inspector must be UNCHECKED for inertiaTensor to hold.
+        rb.automaticInertiaTensor = false;
         rb.inertiaTensor = Vector3.one * 0.0001f;
 
         Debug.Log($"[PlayerMovement] Movement controller initialized. Ground layers: {groundLayers.value}");
@@ -48,9 +59,21 @@ public class PlayerMovementController : MonoBehaviour
     {
         CheckGrounded();
         
-        if (isGrounded)
+        bool isGrappling = swingPhysics != null && swingPhysics.IsGrappling;
+        
+        if (isGrounded && !isGrappling)
         {
             HandleGroundMovement();
+        }
+        else if (isGrappling)
+        {
+            // While grappling, kill any residual horizontal velocity that does not
+            // come from the swing physics (e.g. leftover ground-movement momentum).
+            // Vertical velocity is left intact so gravity and pull forces work.
+            Vector3 vel = rb.linearVelocity;
+            vel.x = Mathf.MoveTowards(vel.x, 0f, groundAcceleration * Time.fixedDeltaTime);
+            vel.z = Mathf.MoveTowards(vel.z, 0f, groundAcceleration * Time.fixedDeltaTime);
+            rb.linearVelocity = vel;
         }
         
         if (lockAllRotation)

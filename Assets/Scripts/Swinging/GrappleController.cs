@@ -193,10 +193,12 @@ public class GrappleController : MonoBehaviour
             );
 
             hapticTimer -= Time.deltaTime;
-        }
-        else
-        {
-            OVRInput.SetControllerVibration(0f, 0f, controllerHand);
+
+            // When the timer expires, explicitly stop vibration once.
+            if (hapticTimer <= 0f)
+            {
+                OVRInput.SetControllerVibration(0f, 0f, controllerHand);
+            }
         }
     }
 
